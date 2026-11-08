@@ -52,6 +52,11 @@ const cValid = { latitude: 13.756345, longitude: 100.5018, timestamp: 3000, accu
 const validStep = isValidCoordinate(cValid, c1);
 assert(validStep.isValid, 'Valid running step correctly accepted');
 
+for (const timestamp of [c1.timestamp, c1.timestamp - 1]) {
+  const staleStep = isValidCoordinate({ ...cValid, timestamp }, c1);
+  assert(!staleStep.isValid && staleStep.distanceMeters === 0, 'Duplicate and older GPS timestamps do not add distance');
+}
+
 console.log('\n--- Testing Pace Calculations ---');
 // 5.24 km in 1965s -> 1965 / 5.24 = 375s = 6 min 15 sec -> "6:15"
 const pace = calculatePace(5.24, 1965);
