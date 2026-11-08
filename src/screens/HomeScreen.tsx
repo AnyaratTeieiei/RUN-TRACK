@@ -231,10 +231,14 @@ export const HomeScreen: React.FC = () => {
     const startPos = await locationService.getCurrentPosition();
     if (startPos) {
       setCurrentCoord(startPos);
-      lastValidCoordRef.current = startPos;
-      setRouteCoordinates([startPos]);
       centerCamera(startPos.latitude, startPos.longitude);
-      setGpsStatus('ready');
+      const validStart = isValidCoordinate(startPos, null).isValid;
+      setGpsStatus(validStart ? 'ready' : 'weak');
+      setLowAccuracyWarning(!validStart);
+      if (validStart) {
+        lastValidCoordRef.current = startPos;
+        setRouteCoordinates([startPos]);
+      }
     }
 
     // 5. Start GPS Watcher
