@@ -1,4 +1,4 @@
-import { GPSCoordinate } from '../types/run';
+import type { GPSCoordinate } from '../types/run';
 
 const EARTH_RADIUS_METERS = 6371000; // Earth's mean radius in meters
 const MAX_RUNNING_SPEED_MPS = 13.0; // ~46.8 km/h (faster than Usain Bolt's max sprint)
@@ -58,6 +58,11 @@ export function isValidCoordinate(
     return { isValid: true, distanceMeters: 0 };
   }
 
+  const timeDeltaSeconds = (newCoord.timestamp - prevCoord.timestamp) / 1000;
+  if (timeDeltaSeconds <= 0) {
+    return { isValid: false, reason: 'Out-of-order GPS timestamp', distanceMeters: 0 };
+  }
+
   const distanceMeters = calculateHaversineDistance(
     prevCoord.latitude,
     prevCoord.longitude,
@@ -75,16 +80,13 @@ export function isValidCoordinate(
   }
 
   // Check time delta and calculate implied velocity
-  const timeDeltaSeconds = (newCoord.timestamp - prevCoord.timestamp) / 1000;
-  if (timeDeltaSeconds > 0) {
-    const impliedSpeedMps = distanceMeters / timeDeltaSeconds;
-    if (impliedSpeedMps > MAX_RUNNING_SPEED_MPS) {
-      return {
-        isValid: false,
-        reason: 'Unrealistic GPS jump',
-        distanceMeters: 0,
-      };
-    }
+  const impliedSpeedMps = distanceMeters / timeDeltaSeconds;
+  if (impliedSpeedMps > MAX_RUNNING_SPEED_MPS) {
+    return {
+      isValid: false,
+      reason: 'Unrealistic GPS jump',
+      distanceMeters: 0,
+    };
   }
 
   return { isValid: true, distanceMeters };
